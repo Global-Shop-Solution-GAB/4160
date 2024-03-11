@@ -1,0 +1,765 @@
+Program.Sub.ScreenSU.Start
+Gui.F_Sec..Create
+Gui.F_Sec..Caption("User Security by Menu Item")
+Gui.F_Sec..Size(12615,7710)
+Gui.F_Sec..Position(0,0)
+Gui.F_Sec..ForeColor(0)
+Gui.F_Sec..Backcolor(-2147483633)
+Gui.F_Sec..MousePointer(0)
+Gui.F_Sec..Event(UnLoad,subUnload)
+Gui.F_Sec..MinX(12615)
+Gui.F_Sec..MinY(7710)
+Gui.F_Sec..Event(Resize,F_Sec_Resize)
+Gui.F_Sec.GsGCSec.Create(GsGridControl)
+Gui.F_Sec.GsGCSec.Size(12450,6285)
+Gui.F_Sec.GsGCSec.Position(15,1050)
+Gui.F_Sec.GsGCSec.Event(RowCellClick,GsGCSec_RowCellClick)
+Gui.F_Sec.pb1.Create(ProgressBar)
+Gui.F_Sec.pb1.Size(3105,255)
+Gui.F_Sec.pb1.Position(15,720)
+Gui.F_Sec.lblMsg.Create(Label,"****Change****",True,3165,240,0,15,510,True,0,"Arial",10,-2147483633,0)
+Gui.F_Sec.picGSSLogo.Create(PictureBox)
+Gui.F_Sec.picGSSLogo.Size(4125,960)
+Gui.F_Sec.picGSSLogo.Position(4245,45)
+Gui.F_Sec.picGSSLogo.Event(DblClick,picGSSLogo_DblClick)
+Gui.F_Sec.cmdRefresh.Create(Button)
+Gui.F_Sec.cmdRefresh.Size(840,375)
+Gui.F_Sec.cmdRefresh.Position(11625,660)
+Gui.F_Sec.cmdRefresh.Caption("REFRESH")
+Gui.F_Sec.cmdRefresh.Event(Click,cmdRefresh_Click)
+Gui.F_Sec.cmdRefresh.ToolTip("Refresh")
+Gui.F_Sec.cmdRefresh.Anchor(9)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+	Program.External.Include.Library("GAB_Canny.lib")
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	'Program will be used to see what users have access to a particular menu item
+	
+	V.Local.sSQL.Declare
+	V.Local.iCnt.Declare
+	V.Local.iMax.Declare
+	V.Local.sIcon.Declare
+	V.Local.sGssLogo.Declare
+	
+	F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+	F.ODBC.Connection!common.OpenConnection(V.Ambient.Ccon,V.Ambient.Cuser,V.Ambient.Cpass)
+	
+	F.Intrinsic.String.Build("{0}\GAB\GAS\gss2.ico",V.Caller.PluginsDir,v.Local.sIcon)
+	F.Intrinsic.String.Build("{0}\GAB\GAS\GAB_GSS_Logo_Green_Dash.png",V.Caller.PluginsDir,V.Local.sGssLogo)
+	Gui.frmWeb..Icon(V.Local.sIcon)
+	Gui.F_Sec..Icon(V.Local.sIcon)
+	Gui.F_Sec.picGSSLogo.Picture(V.Local.sGssLogo)
+	
+	'Canny
+	F.Intrinsic.Control.CallSub(CannyCheckUser,"Form","F_Sec")
+	Gui.F_Sec.cmdCanny.Position(8400,45)
+	
+	F.Intrinsic.Control.CallSub(setanchors)
+	
+	Gui.F_Sec..Show
+		
+	F.Intrinsic.Control.CallSub(controlsdisable)
+	F.Intrinsic.Control.CallSub(loaddictuser)
+	F.Intrinsic.Control.CallSub(loaddtmodule)
+	F.Intrinsic.Control.CallSub(loaddtheader)
+	F.Intrinsic.Control.CallSub(loaddtselection1)
+	F.Intrinsic.Control.CallSub(loaddtselection2)
+	F.Intrinsic.Control.CallSub(loaddtsecurity1)
+	F.Intrinsic.Control.CallSub(loaddtsecurity2)
+	F.Intrinsic.Control.CallSub(loaddvgvmodule)
+	F.Intrinsic.Control.CallSub(loaddvgvheader)
+	F.Intrinsic.Control.CallSub(loaddvgvselection1)
+	F.Intrinsic.Control.CallSub(loaddvgvselection2)
+	F.Intrinsic.Control.CallSub(loaddvgvsecurity1)
+	F.Intrinsic.Control.CallSub(loaddvgvsecurity2)
+	F.Intrinsic.Control.CallSub(controlenable)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.subUnload.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.ODBC.Connection!con.Close
+	F.Intrinsic.Control.End
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.subUnload.End
+
+Program.Sub.SetAnchors.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	'0 - None
+	'1 - Top
+	'2 - Bottom
+	'4 - Left
+	'8 - Right
+	
+	Gui.F_Sec.frameButtons.Anchor(9)
+	Gui.F_Sec.lblMsg.Anchor(5)
+	Gui.F_Sec.pb1.Anchor(5)
+	Gui.F_Sec.GsGCSec.Anchor(15)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.SetAnchors.End
+
+Program.Sub.LoadDictUser.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sSQL.Declare
+	V.Local.bExists.Declare
+	
+	F.Data.Dictionary.Exists("dUser",V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists,=,True)
+		F.Data.Dictionary.Close("dUser")
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.String.Build("SELECT USER_ID,GS_USER AS {0}USER{0} FROM USER_INFORMATION ORDER BY USER_ID;",V.Ambient.DblQuote,V.Local.sSQL)
+	F.Data.Dictionary.CreateFromSQL("dUser","common",V.Local.sSQL)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDictUser.End
+
+Program.Sub.LoadDTModule.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule.Exists,=,True)
+		F.Data.DataTable.Close("dtModule")
+	F.Intrinsic.Control.EndIf
+
+	Gui.F_Sec.lblMsg.Caption("Loading Modules....")
+	F.Data.DataTable.CreateFromSQL("dtModule","con","SELECT MODULE_ID,MODULE,MODULE_TITLE from MENU_MODULE WHERE MODULE_ID BETWEEN 1 AND 19 ORDER BY MODULE_ID;",True)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTModule.End
+
+Program.Sub.LoadDVGVModule.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule","dvModule")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvModule","dtModule","dvModule")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","AllowSort",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvModule","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvModule","MODULE","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvModule","MODULE_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvModule","MODULE_TITLE","Caption","Module")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvModule","MODULE_TITLE","CellBackColor","LightGray")
+	
+	Gui.F_Sec.GsGCSec.MainView("gvModule")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVModule.End
+
+Program.Sub.LoadDTHeader.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader.Exists,=,True)
+		F.Data.DataTable.Close("dtModule$dtHeader")
+	F.Intrinsic.Control.EndIf
+	
+	Gui.F_Sec.lblMsg.Caption("Loading Headers....")
+	F.Data.DataTable.CreateFromSQL("dtModule$dtHeader","con","SELECT HEADER_ID,MODULE_ID,HEADER_TITLE FROM MENU_HEADERS WHERE MODULE_ID IN (SELECT MODULE_ID FROM MENU_MODULE WHERE MODULE_ID BETWEEN 1 AND 19) ORDER BY MODULE_ID,HEADER_TYPE;",True)
+	F.Data.DataTable.AddRelation("dtModule","MODULE_ID","dtModule$dtHeader","MODULE_ID")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTHeader.End
+
+Program.Sub.LoadDVGVHeader.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule$dtHeader","dvHeader")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvHeader","dtModule","dvHeader")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","AllowSort",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvHeader","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvHeader","HEADER_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvHeader","MODULE_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvHeader","HEADER_TITLE","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvHeader","HEADER_TITLE","CellBackColor","AliceBlue")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVHeader.End
+
+Program.Sub.LoadDTSelection1.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection1.Exists,=,True)
+		F.Data.DataTable.Close("dtModule$dtHeader$dtSelection1")
+	F.Intrinsic.Control.EndIf
+	
+	Gui.F_Sec.lblMsg.Caption("Loading Selections....")
+	F.Data.DataTable.CreateFromSQL("dtModule$dtHeader$dtSelection1","con","SELECT SELECTION_ID,HEADER_ID,SEQUENCE,TITLE,JOB_STREAM_ID FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 ORDER BY SELECTION_ID,HEADER_ID,SEQUENCE;",True)
+	F.Data.DataTable.AddRelation("dtModule$dtHeader","HEADER_ID","dtModule$dtHeader$dtSelection1","HEADER_ID")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTSelection1.End
+
+Program.Sub.LoadDVGVSelection1.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule$dtHeader$dtSelection1","dvSelection1")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvSelection1","dtModule","dvSelection1")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","AllowSort",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection1","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","SELECTION_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","HEADER_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","SEQUENCE","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","JOB_STREAM_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","TITLE","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection1","TITLE","CellBackColor","LightGray")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVSelection1.End
+
+Program.Sub.LoadDTSelection2.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection2.Exists,=,True)
+		F.Data.DataTable.Close("dtModule$dtHeader$dtSelection2")
+	F.Intrinsic.Control.EndIf
+	
+	Gui.F_Sec.lblMsg.Caption("Loading Selections....")
+	F.Data.DataTable.CreateFromSQL("dtModule$dtHeader$dtSelection2","con","SELECT SELECTION_ID,HEADER_ID,SEQUENCE,TITLE,JOB_STREAM_ID,SELECTION_ID AS SELECTION_ID2 FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 AND SELECTION_ID < 100000 AND CHILDOFID = 0 UNION SELECT CHILDOFID AS SELECTION_ID,HEADER_ID,SEQUENCE,TITLE,JOB_STREAM_ID,SELECTION_ID AS SELECTION_ID2 FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 AND SELECTION_ID < 100000 AND CHILDOFID <> 0;",True)
+	F.Data.DataTable.AddRelation("dtModule$dtHeader$dtSelection1","SELECTION_ID*!*HEADER_ID","dtModule$dtHeader$dtSelection2","SELECTION_ID*!*HEADER_ID")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTSelection2.End
+
+Program.Sub.LoadDVGVSelection2.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule$dtHeader$dtSelection2","dvSelection2")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvSelection2","dtModule","dvSelection2")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","AllowSort",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSelection2","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","SELECTION_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","HEADER_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","SEQUENCE","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","JOB_STREAM_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","SELECTION_ID2","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","TITLE","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSelection2","TITLE","CellBackColor","AliceBlue")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVSelection2.End
+
+Program.Sub.LoadDTSecurity1.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sSQL.Declare
+	V.Local.iCnt.Declare
+	V.Local.iMax.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection$dtSecurity1.Exists,=,True)
+		F.Data.DataTable.Close("dtModule$dtHeader$dtSelection$dtSecurity1")
+	F.Intrinsic.Control.EndIf
+	
+	Gui.F_Sec.lblMsg.Caption("Loading Security....(1/2)")
+	V.Local.iCnt.Set(0)
+	Gui.F_Sec.pb1.Min(0)
+	F.ODBC.Connection!con.ExecuteAndReturn("SELECT COUNT(*) FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 AND JOB_STREAM_ID <> -1;",V.Local.iMax)
+	Gui.F_Sec.pb1.Max(V.Local.iMax)
+	F.ODBC.Connection!con.OpenRecordsetRO("rstSel","SELECT SELECTION_ID,SEQUENCE FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 AND JOB_STREAM_ID <> -1 ORDER BY SELECTION_ID,SEQUENCE;")
+	F.Intrinsic.Control.DoUntil(V.ODBC.con!rstSel.EOF,=,True)
+		F.Intrinsic.Math.Add(V.Local.iCnt,1,V.Local.iCnt)
+		Gui.F_Sec.pb1.Value(V.Local.iCnt)
+		F.Intrinsic.String.Build("SELECT DISTINCT SECURITY_ID,LEVEL_ID,LEVEL_SEQ,ACCESS_ID FROM MENU_SECURITY WHERE LEVEL_ID = {0} AND LEVEL_SEQ = {1} AND ENABLED = 1 AND LEVEL_TYPE = 2;",V.ODBC.con!rstSel.FieldVal!SELECTION_ID,V.ODBC.con!rstSel.FieldVal!SEQUENCE,V.Local.sSQL)
+		F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection$dtSecurity1.Exists,=,True)
+			F.Data.DataTable.CreateFromSQL("dtMerge","con",V.Local.sSQL,True)
+			F.Data.DataTable.AddColumn("dtMerge","USER",String)
+			F.Data.DataTable.AddColumn("dtMerge","REMOVE1",String,"Remove")
+			F.Data.DataTable.AddColumn("dtMerge","ADD1",String,"Add User")
+			F.Data.DataTable.Merge("dtMerge","dtModule$dtHeader$dtSelection$dtSecurity1",True,3)
+			F.Data.DataTable.Close("dtMerge")
+		F.Intrinsic.Control.Else
+			F.Data.DataTable.CreateFromSQL("dtModule$dtHeader$dtSelection$dtSecurity1","con",V.Local.sSQL,True)
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity1","USER",String)
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity1","REMOVE1",String,"Remove")
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity1","ADD1",String,"Add User")
+		F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstSel.MoveNext
+	F.Intrinsic.Control.Loop
+	F.ODBC.con!rstSel.Close
+	
+	F.Data.DataTable.FillFromDictionary("dtModule$dtHeader$dtSelection$dtSecurity1","dUser","ACCESS_ID","USER")
+	F.Data.DataTable.AddRelation("dtModule$dtHeader$dtSelection1","SELECTION_ID*!*SEQUENCE","dtModule$dtHeader$dtSelection$dtSecurity1","LEVEL_ID*!*LEVEL_SEQ")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTSecurity1.End
+
+Program.Sub.LoadDVGVSecurity1.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule$dtHeader$dtSelection$dtSecurity1","dvSecurity1")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvSecurity1","dtModule","dvSecurity1")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","AllowSort",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity1","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","SECURITY_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","LEVEL_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","LEVEL_SEQ","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","VisibleIndex","0")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","VisibleIndex","1")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","VisibleIndex","3")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","USER","VisibleIndex","4")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","Caption","User ID")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","USER","Caption","User ")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","MaxWidth","65")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","MaxWidth","65")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","MaxWidth","55")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","HeaderHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","CellBackColor","Gray")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","CellBackColor","Gray")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","CellForeColor","White")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","CellForeColor","White")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ADD1","ToolTip","Click 'Add' To Add User Security")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","REMOVE1","ToolTip","Click 'Remove' To Remove User Security")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","ACCESS_ID","CellBackColor","AliceBlue")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity1","USER","CellBackColor","AliceBlue")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVSecurity1.End
+
+Program.Sub.LoadDTSecurity2.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.sSQL.Declare
+	V.Local.iCnt.Declare
+	V.Local.iMax.Declare
+	
+	F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection$dtSecurity2.Exists,=,True)
+		F.Data.DataTable.Close("dtModule$dtHeader$dtSelection$dtSecurity2")
+	F.Intrinsic.Control.EndIf
+
+	Gui.F_Sec.lblMsg.Caption("Loading Security....(2/2)")
+	V.Local.iCnt.Set(0)
+	Gui.F_Sec.pb1.Min(0)
+	F.ODBC.Connection!con.ExecuteAndReturn("SELECT COUNT(*) FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0;",V.Local.iMax)
+	Gui.F_Sec.pb1.Max(V.Local.iMax)
+	F.ODBC.Connection!con.OpenRecordsetRO("rstSel","SELECT SELECTION_ID,SEQUENCE,SELECTION_ID AS SELECTION_ID2 FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 AND SELECTION_ID < 100000 AND CHILDOFID = 0 UNION SELECT CHILDOFID AS SELECTION_ID,SEQUENCE,SELECTION_ID AS SELECTION_ID2 FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 AND SELECTION_ID < 100000 AND CHILDOFID <> 0;")
+	F.Intrinsic.Control.DoUntil(V.ODBC.con!rstSel.EOF,=,True)
+		F.Intrinsic.Math.Add(V.Local.iCnt,1,V.Local.iCnt)
+		Gui.F_Sec.pb1.Value(V.Local.iCnt)
+		F.Intrinsic.String.Build("SELECT DISTINCT SECURITY_ID,LEVEL_ID,LEVEL_SEQ,ACCESS_ID FROM MENU_SECURITY WHERE LEVEL_ID = {0} AND LEVEL_SEQ = {1} AND ENABLED = 1 AND LEVEL_TYPE = 2;",V.ODBC.con!rstSel.FieldVal!SELECTION_ID2,V.ODBC.con!rstSel.FieldVal!SEQUENCE,V.Local.sSQL)
+		F.Intrinsic.Control.If(V.DataTable.dtModule$dtHeader$dtSelection$dtSecurity2.Exists,=,True)
+			F.Data.DataTable.CreateFromSQL("dtMerge","con",V.Local.sSQL,True)
+			F.Data.DataTable.AddColumn("dtMerge","USER",String)
+			F.Data.DataTable.AddColumn("dtMerge","REMOVE2",String,"Remove")
+			F.Data.DataTable.AddColumn("dtMerge","ADD2",String,"Add User")
+			F.Data.DataTable.Merge("dtMerge","dtModule$dtHeader$dtSelection$dtSecurity2",True,3)
+			F.Data.DataTable.Close("dtMerge")
+		F.Intrinsic.Control.Else
+			F.Data.DataTable.CreateFromSQL("dtModule$dtHeader$dtSelection$dtSecurity2","con",V.Local.sSQL,True)
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity2","USER",String)
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity2","REMOVE2",String,"Remove")
+			F.Data.DataTable.AddColumn("dtModule$dtHeader$dtSelection$dtSecurity2","ADD2",String,"Add User")
+		F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstSel.MoveNext
+	F.Intrinsic.Control.Loop
+	F.ODBC.con!rstSel.Close
+	
+	F.Data.DataTable.FillFromDictionary("dtModule$dtHeader$dtSelection$dtSecurity2","dUser","ACCESS_ID","USER")
+	F.Data.DataTable.AddRelation("dtModule$dtHeader$dtSelection2","SELECTION_ID2*!*SEQUENCE","dtModule$dtHeader$dtSelection$dtSecurity2","LEVEL_ID*!*LEVEL_SEQ")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDTSecurity2.End
+
+Program.Sub.LoadDVGVSecurity2.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iRet.Declare
+	V.Local.iCnt.Declare
+	
+	F.Data.DataView.Create("dtModule$dtHeader$dtSelection$dtSecurity2","dvSecurity2")
+	Gui.F_Sec.GsGCSec.AddGridViewFromDataView("gvSecurity2","dtModule","dvSecurity2")
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","Multiselect",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","OptionBehaviorEditable",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","ReadOnly",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","AllowSort",True)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","AllowFilter",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","OptionsDetailShowDetailTabs",False)
+	Gui.F_Sec.GsGCSec.SetGridViewProperty("gvSecurity2","OptionsViewShowGroupPanel",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","SECURITY_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","LEVEL_ID","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","LEVEL_SEQ","Visible",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","VisibleIndex","0")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","VisibleIndex","1")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","VisibleIndex","3")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","USER","VisibleIndex","4")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","ShowCaption",False)
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","Caption","User ID")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","USER","Caption","User ")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","MaxWidth","65")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","MaxWidth","65")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","MaxWidth","55")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","HeaderHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","CellHAlignment","Center")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","CellBackColor","Gray")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","CellBackColor","Gray")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","CellForeColor","White")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","CellForeColor","White")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ADD2","ToolTip","Click 'Add' To Add User Security")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","REMOVE2","ToolTip","Click 'Remove' To Remove User Security")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","ACCESS_ID","CellBackColor","AliceBlue")
+	Gui.F_Sec.GsGCSec.SetColumnProperty("gvSecurity2","USER","CellBackColor","LightGray")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.LoadDVGVSecurity2.End
+
+Program.Sub.GsGCSec_RowCellClick.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iSecurityID.Declare
+	V.Local.iAccessId.Declare
+	V.Local.iRet.Declare
+	V.Local.sSQL.Declare
+	V.Local.iLevelType.Declare
+	V.Local.iLevelID.Declare
+	V.Local.iLevelSeq.Declare
+	V.Local.iAccessType.Declare
+	V.Local.iEnabled.Declare
+	V.Local.iWeekday.Declare
+	V.Local.iRestrictedAccess.Declare
+	V.Local.sRet.Declare
+	V.Local.sUser.Declare
+	
+	F.Intrinsic.Control.SelectCase(V.Args.Column)
+		F.Intrinsic.Control.Case("REMOVE1")
+			F.Intrinsic.UI.Msgbox("Continue with the removal of User Permissions?","Confirmation",4,V.Local.iRet)
+			F.Intrinsic.Control.If(V.Local.iRet,=,6)
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity1",0,V.Args.RowIndex,V.Local.iSecurityID)
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity1",3,V.Args.RowIndex,V.Local.iAccessId)
+				F.Intrinsic.String.Build("DELETE FROM MENU_SECURITY WHERE SECURITY_ID = {0} AND ACCESS_ID = {1};",V.Local.iSecurityID,V.Local.iAccessId,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.DeleteRow("dtModule$dtHeader$dtSelection$dtSecurity1",V.Args.RowIndex)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Case("REMOVE2")
+			F.Intrinsic.UI.Msgbox("Continue with the removal of User Permissions?","Confirmation",4,V.Local.iRet)
+			F.Intrinsic.Control.If(V.Local.iRet,=,6)
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity2",0,V.Args.RowIndex,V.Local.iSecurityID)
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity2",3,V.Args.RowIndex,V.Local.iAccessId)
+				F.Intrinsic.String.Build("DELETE FROM MENU_SECURITY WHERE SECURITY_ID = {0} AND ACCESS_ID = {1};",V.Local.iSecurityID,V.Local.iAccessId,V.Local.sSQL)
+				F.ODBC.Connection!con.Execute(V.Local.sSQL)
+				F.Data.DataTable.DeleteRow("dtModule$dtHeader$dtSelection$dtSecurity2",V.Args.RowIndex)
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Case("ADD1")
+			F.Intrinsic.UI.Browser(10,"",V.Local.sRet)
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+				V.Local.iAccessId.Set(V.Local.sRet(0).Long)
+				V.Local.sUser.Set(V.Local.sRet(1))
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity1",0,V.Args.RowIndex,V.Local.iSecurityID)
+				F.Intrinsic.String.Build("SELECT * FROM MENU_SECURITY WHERE SECURITY_ID = '{0}';",V.Local.iSecurityID,V.Local.sSQL)
+				F.ODBC.Connection!con.OpenRecordsetRO("rstSecurity",V.Local.sSQL)
+					F.ODBC.Connection!con.ExecuteAndReturn("SELECT TOP 1 SECURITY_ID FROM MENU_SECURITY ORDER BY SECURITY_ID DESC;",V.Local.iSecurityID)
+					F.Intrinsic.Math.Add(V.Local.iSecurityID,1,V.Local.iSecurityID)
+					V.Local.iLevelType.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_TYPE)
+					V.Local.iLevelID.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_ID)
+					V.Local.iLevelSeq.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_SEQ)
+					V.Local.iAccessType.Set(V.ODBC.con!rstSecurity.FieldValLong!ACCESS_TYPE)
+					V.Local.iEnabled.Set(1)
+					V.Local.iWeekday.Set(V.ODBC.con!rstSecurity.FieldValLong!WEEKDAY)
+					V.Local.iRestrictedAccess.Set(0)
+					V.Local.sSQL.Set("INSERT INTO MENU_SECURITY")
+					F.Intrinsic.String.Build("{11} VALUES({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10});",V.Local.iSecurityID,V.Local.iLevelType,V.Local.iLevelID,V.Local.iLevelSeq,V.Local.iAccessType,V.Local.iAccessId,V.Local.iEnabled,V.Local.iWeekday,"NULL","NULL",V.Local.iRestrictedAccess,V.Local.sSQL,V.Local.sSQL)
+					F.ODBC.Connection!con.Execute(V.Local.sSQL)
+					F.Data.DataTable.AddRow("dtModule$dtHeader$dtSelection$dtSecurity1","SECURITY_ID",V.Local.iSecurityID,"LEVEL_ID",V.Local.iLevelID,"LEVEL_SEQ",V.Local.iLevelSeq,"ACCESS_ID",V.Local.iAccessId,"USER",V.Local.sUser)
+				F.ODBC.con!rstSecurity.Close
+			F.Intrinsic.Control.EndIf
+		F.Intrinsic.Control.Case("ADD2")
+			F.Intrinsic.UI.Browser(10,"",V.Local.sRet)
+			F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+			F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+				V.Local.iAccessId.Set(V.Local.sRet(0).Long)
+				V.Local.sUser.Set(V.Local.sRet(1))
+				Gui.F_Sec.GsGCSec.GetCellValue("gvSecurity2",0,V.Args.RowIndex,V.Local.iSecurityID)
+				F.Intrinsic.String.Build("SELECT * FROM MENU_SECURITY WHERE SECURITY_ID = '{0}';",V.Local.iSecurityID,V.Local.sSQL)
+				F.ODBC.Connection!con.OpenRecordsetRO("rstSecurity",V.Local.sSQL)
+					F.ODBC.Connection!con.ExecuteAndReturn("SELECT TOP 1 SECURITY_ID FROM MENU_SECURITY ORDER BY SECURITY_ID DESC;",V.Local.iSecurityID)
+					F.Intrinsic.Math.Add(V.Local.iSecurityID,1,V.Local.iSecurityID)
+					V.Local.iLevelType.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_TYPE)
+					V.Local.iLevelID.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_ID)
+					V.Local.iLevelSeq.Set(V.ODBC.con!rstSecurity.FieldValLong!LEVEL_SEQ)
+					V.Local.iAccessType.Set(V.ODBC.con!rstSecurity.FieldValLong!ACCESS_TYPE)
+					V.Local.iEnabled.Set(1)
+					V.Local.iWeekday.Set(V.ODBC.con!rstSecurity.FieldValLong!WEEKDAY)
+					V.Local.iRestrictedAccess.Set(0)
+					
+					V.Local.sSQL.Set("INSERT INTO MENU_SECURITY")
+					F.Intrinsic.String.Build("{11} VALUES({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10});",V.Local.iSecurityID,V.Local.iLevelType,V.Local.iLevelID,V.Local.iLevelSeq,V.Local.iAccessType,V.Local.iAccessId,V.Local.iEnabled,V.Local.iWeekday,"NULL","NULL",V.Local.iRestrictedAccess,V.Local.sSQL,V.Local.sSQL)
+					F.ODBC.Connection!con.Execute(V.Local.sSQL)
+					F.Data.DataTable.AddRow("dtModule$dtHeader$dtSelection$dtSecurity2","SECURITY_ID",V.Local.iSecurityID,"LEVEL_ID",V.Local.iLevelID,"LEVEL_SEQ",V.Local.iLevelSeq,"ACCESS_ID",V.Local.iAccessId,"USER",V.Local.sUser)
+					
+					'Check if header sequence already exists, if not it will create it
+					F.Intrinsic.String.Build("SELECT * FROM MENU_SECURITY WHERE LEVEL_ID = '{0}' AND LEVEL_SEQ = 0 AND ACCESS_ID = '{1}';",V.Local.iLevelID,v.Local.iAccessId,V.Local.sSQL)
+					F.Data.DataTable.CreateFromSQL("dtSeqCheck","con",v.Local.sSQL)
+					F.Intrinsic.Control.If(v.DataTable.dtSeqCheck.RowCount,<=,0)
+						F.ODBC.Connection!con.ExecuteAndReturn("SELECT TOP 1 SECURITY_ID FROM MENU_SECURITY ORDER BY SECURITY_ID DESC;",V.Local.iSecurityID)
+						F.Intrinsic.Math.Add(V.Local.iSecurityID,1,V.Local.iSecurityID)
+						V.Local.sSQL.Set("INSERT INTO MENU_SECURITY")
+						F.Intrinsic.String.Build("{11} VALUES({0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10});",V.Local.iSecurityID,V.Local.iLevelType,V.Local.iLevelID,0,V.Local.iAccessType,V.Local.iAccessId,V.Local.iEnabled,V.Local.iWeekday,"NULL","NULL",V.Local.iRestrictedAccess,V.Local.sSQL,V.Local.sSQL)
+						F.ODBC.Connection!con.Execute(V.Local.sSQL)
+					F.Intrinsic.Control.EndIf
+					F.Data.DataTable.Close(dtSeqCheck)
+				F.ODBC.con!rstSecurity.Close
+			F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndSelect
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry	
+Program.Sub.GsGCSec_RowCellClick.End
+
+Program.Sub.cmdRefresh_Click.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	F.Intrinsic.Control.CallSub(controlsdisable)
+	F.Intrinsic.Control.CallSub(loaddictuser)
+	F.Intrinsic.Control.CallSub(loaddtmodule)
+	F.Intrinsic.Control.CallSub(loaddtheader)
+	F.Intrinsic.Control.CallSub(loaddtselection1)
+	F.Intrinsic.Control.CallSub(loaddtselection2)
+	F.Intrinsic.Control.CallSub(loaddtsecurity1)
+	F.Intrinsic.Control.CallSub(loaddtsecurity2)
+	F.Intrinsic.Control.CallSub(loaddvgvmodule)
+	F.Intrinsic.Control.CallSub(loaddvgvheader)
+	F.Intrinsic.Control.CallSub(loaddvgvselection1)
+	F.Intrinsic.Control.CallSub(loaddvgvselection2)
+	F.Intrinsic.Control.CallSub(loaddvgvsecurity1)
+	F.Intrinsic.Control.CallSub(loaddvgvsecurity2)
+	F.Intrinsic.Control.CallSub(controlenable)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.cmdRefresh_Click.End
+
+Program.Sub.ControlsDisable.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	Gui.F_Sec.cmdRefresh.Enabled(False)
+	Gui.F_Sec.GsGCSec.Enabled(False)
+	Gui.F_Sec.GsGCSec.Visible(False)
+	Gui.F_Sec.pb1.Visible(True)
+	Gui.F_Sec.lblMsg.Visible(True)
+	Gui.F_Sec.lblMsg.Caption("Loading Menu Security....")
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.ControlsDisable.End
+
+Program.Sub.ControlEnable.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	Gui.F_Sec.cmdRefresh.Enabled(True)
+	Gui.F_Sec.GsGCSec.Enabled(True)
+	Gui.F_Sec.lblMsg.Visible(False)
+	Gui.F_Sec.pb1.Visible(False)
+	Gui.F_Sec.GsGCSec.Visible(True)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.ControlEnable.End
+
+Program.Sub.LoadJobStream1.Start
+Program.Sub.LoadJobStream1.End
+
+Program.Sub.F_Sec_Resize.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	V.Local.iX.Declare
+	
+	F.Intrinsic.Math.Div(V.Screen.F_Sec.Width,2,V.Local.iX)
+	F.Intrinsic.Math.Sub(V.Local.iX,2000,V.Local.iX)
+	Gui.F_Sec.picGSSLogo.Position(V.Local.iX,45)
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.F_Sec_Resize.End
+
+Program.Sub.picGSSLogo_DblClick.Start
+	F.Intrinsic.Control.Try
+	V.Local.sError.Declare
+	
+	Gui.frmWeb..Show
+	
+	F.Intrinsic.Control.Catch
+		F.Intrinsic.String.Build("Project: GAB_4160_User_Security_by_Menu_Item.g2u{0}{0}Subroutine: {1}{0}Error Occurred {2} with description {3}.",V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Local.sError)
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+		F.Intrinsic.Control.End 
+	F.Intrinsic.Control.EndTry
+Program.Sub.picGSSLogo_DblClick.End
+
+Program.Sub.Query_Notes.Start
+'--MODULE
+'SELECT MODULE_ID,MODULE,MODULE_TITLE from MENU_MODULE WHERE MODULE_ID BETWEEN 1 AND 19 ORDER BY MODULE_ID;
+'--HEADERS
+'SELECT HEADER_ID,MODULE_ID,HEADER_TITLE FROM MENU_HEADERS WHERE MODULE_ID IN (SELECT MODULE_ID FROM MENU_MODULE WHERE MODULE_ID BETWEEN 1 AND 19) ORDER BY MODULE_ID,HEADER_TYPE;
+'--SELECTION1
+'SELECT SELECTION_ID,HEADER_ID,SEQUENCE,TITLE,JOB_STREAM_ID FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 ORDER BY SELECTION_ID,HEADER_ID,SEQUENCE;
+'--SELECTION2
+'SELECT SELECTION_ID,HEADER_ID,SEQUENCE,TITLE,JOB_STREAM_ID FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 ORDER BY SELECTION_ID,HEADER_ID,SEQUENCE;
+'--SECURITY1
+'SELECT COUNT(*) FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 AND JOB_STREAM_ID <> -1;
+'SELECT SELECTION_ID,SEQUENCE FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE = 0 AND JOB_STREAM_ID <> -1 ORDER BY SELECTION_ID,SEQUENCE;
+'SELECT DISTINCT SECURITY_ID,LEVEL_ID,LEVEL_SEQ,ACCESS_ID FROM MENU_SECURITY WHERE LEVEL_ID = 533 AND LEVEL_SEQ = 0 AND ENABLED = 1;
+'select * from MENU_SECURITY WHERE LEVEL_ID = 533 AND LEVEL_SEQ = 0;
+'--SECURITY2
+'SELECT COUNT(*) FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0;
+'SELECT SELECTION_ID,SEQUENCE FROM MENU_SELECTIONS WHERE HEADER_ID IN (SELECT HEADER_ID FROM MENU_HEADERS WHERE MODULE_ID BETWEEN 1 AND 19) AND SEQUENCE <> 0 ORDER BY SELECTION_ID,SEQUENCE;
+'SELECT DISTINCT SECURITY_ID,LEVEL_ID,LEVEL_SEQ,ACCESS_ID FROM MENU_SECURITY WHERE LEVEL_ID = {0} AND LEVEL_SEQ = {1};
+Program.Sub.Query_Notes.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB_4160_Menu_Security_Lookup$}$AGV$}$01/29/2016 4:21:47 PM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$Project will be used to see what menu items are access by what users
+Program.Sub.Comments.End
